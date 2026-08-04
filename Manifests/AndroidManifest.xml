@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.infoshagame.smartsheepcreator"
+    android:installLocation="auto">
+
+    <!-- Permissions required by this app. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Required for Google Play Billing (subscriptions). -->
+    <uses-permission android:name="com.android.vending.BILLING" />
+
+    <!-- Informs the app store that this app requires OpenGL ES 2.0 as a minimum. Required by Corona/Solar2D. -->
+    <uses-feature android:glEsVersion="0x00020000" />
+
+    <!-- Telephony set to not required so tablets and non-phone devices can install. -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:fullBackupContent="false"
+        android:hardwareAccelerated="true"
+        tools:targetApi="33">
+
+        <!-- Main Corona activity that runs the Smart Sheep Creator project. -->
+        <activity
+            android:name="com.ansca.corona.CoronaActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="keyboard|keyboardHidden|navigation|screenSize|orientation"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:exported="true"
+            android:networkSecurityConfig="@xml/network_security_config"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Optional Corona activities. -->
+        <activity
+            android:name="com.ansca.corona.CameraActivity"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />

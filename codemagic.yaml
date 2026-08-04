@@ -1,0 +1,39 @@
+workflows:
+  ios-workflow:
+    name: MemorySpring iOS Build
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    environment:
+      xcode: 26.2
+      groups:
+        - ios_signing
+        - appstore_credentils
+      vars:
+        APP_NAME: "MemorySpring"
+        BUNDLE_ID: "com.infoshagame.memoryspring"
+        APP_VERSION: "1.00.00"
+        S2D_BUILD_NAME: "2026.3729"
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: "com.infoshagame.memoryspring"
+
+    scripts:
+      - name: Ensure build script is executable
+        script: |
+          chmod +x Util/build.sh
+
+      - name: Build iOS app
+        script: |
+          ./Util/build.sh
+
+    artifacts:
+      - build/**/*.ipa
+      - "**/*.ipa"
+
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
