@@ -48,14 +48,14 @@ local function refreshPhoto()
     local sw=display.safeActualContentWidth or display.contentWidth
     local cx=display.contentCenterX
     local y=scene.photoY
-    rect(photoGroup,cx,y,sw-44,92,{0.90,0.93,0.88},18)
+    rect(photoGroup,cx,y,sw-44,110,{0.90,0.93,0.88},18)
     local path=system.pathForFile(photoFilename,system.DocumentsDirectory)
     local f=path and io.open(path,"rb")
     if f then
         f:close()
-        local img=display.newImageRect(photoGroup,photoFilename,system.DocumentsDirectory,94,94)
-        if img then img.x=cx-(sw-64)/2+59;img.y=y end
-        label(photoGroup,"Change photo",cx+42,y,sw-170,18,ink,true)
+        local img=display.newImageRect(photoGroup,photoFilename,system.DocumentsDirectory,102,102)
+        if img then img.x=cx-(sw-44)/2+62;img.y=y end
+        label(photoGroup,"Change photo",cx+54,y,sw-160,21,ink,true)
     else
         label(photoGroup,"+  Choose a favorite photo",cx,y,sw-70,21,ink,true)
     end
@@ -78,15 +78,24 @@ local function refreshPhoto()
         return true
     end)
 end
-local function field(parent,title,value,y,h,key)
+local function field(parent,title,value,y,h,key,example)
     local sw=display.safeActualContentWidth or display.contentWidth
     local cx=display.contentCenterX
-    label(parent,title,cx,y-43,sw-54,20,ink,true)
+    label(parent,title,cx,y-44,sw-54,20,ink,true)
     local backing=rect(parent,cx,y+15,sw-44,h,{1,0.985,0.956},14)
     backing.strokeWidth=1.5
     backing:setStrokeColor(0.72,0.62,0.49)
-    local input=native.newTextBox(cx,y+15,sw-64,h-16)
-    input.isEditable=true
+    local input
+    if key=="words" then
+        -- Single-line field avoids the desktop simulator's textbox scroll arrows.
+        input=native.newTextField(cx,y+15,sw-66,math.min(52,h-12))
+        input.placeholder=example
+    else
+        -- Multiline encouragement still needs a native textbox on iOS/Android.
+        input=native.newTextBox(cx,y+15,sw-66,h-14)
+        input.isEditable=true
+        label(parent,example,cx,y+h/2+35,sw-56,15,muted,false)
+    end
     input.hasBackground=false
     input.font=native.newFont(native.systemFont,22)
     input.text=value or ""
@@ -144,18 +153,25 @@ function scene:create(event)
     local wash=rect(g,cx,top+sh*0.48,sw-12,sh*0.91,{1,0.976,0.938},20)
     wash.alpha=0.96
 
+    local back=label(g,"‹ Back",cx-sw*0.38,top+26*scale,sw*0.24,20*scale,sage,true)
+    back:addEventListener("tap",function()
+        sync()
+        native.setKeyboardFocus(nil)
+        composer.gotoScene("memorySpringHome",{effect="slideRight",time=220})
+        return true
+    end)
     label(g,"MEMORY SPRING",cx,top+26*scale,sw-40,15*scale,sage,true)
     label(g,"Create a Memory",cx,top+68*scale,sw-36,31*scale,ink,true)
     label(g,"A familiar face. A joyful moment.",cx,top+110*scale,sw-38,18*scale,muted,false)
 
     label(g,"1  CHOOSE A FAVORITE PHOTO",cx,top+153*scale,sw-40,16*scale,gold,true)
-    self.photoY=top+207*scale
+    self.photoY=top+212*scale
 
     label(g,"2  WORDS TO REMEMBER",cx,top+284*scale,sw-40,16*scale,gold,true)
-    field(g,"Name or special words",state.words,top+352*scale,88*scale,"words")
+    field(g,"Name or special words",state.words,top+352*scale,72*scale,"words","Kind, Funny, Loving")
 
     label(g,"3  MESSAGE OF ENCOURAGEMENT",cx,top+483*scale,sw-40,16*scale,gold,true)
-    field(g,"What would you like them to hear?",state.success,top+548*scale,92*scale,"success")
+    field(g,"What would you like them to hear?",state.success,top+548*scale,92*scale,"success","Example: You are loved, always.")
 
     local by=top+sh-47*scale
     local button=rect(g,cx,by,sw-44,58*scale,sage,21*scale)
