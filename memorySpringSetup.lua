@@ -159,10 +159,8 @@ function scene:create(event)
     self.photoY=top+212*scale
 
     label(g,"2  WORDS TO REMEMBER",cx,top+284*scale,sw-40,16*scale,gold,true)
-    field(g,"Name or special words",state.words,top+352*scale,88*scale,"words")
 
     label(g,"3  MESSAGE OF ENCOURAGEMENT",cx,top+483*scale,sw-40,16*scale,gold,true)
-    field(g,"What would you like them to hear?",state.success,top+548*scale,92*scale,"success")
 
     local by=top+sh-47*scale
     local button=rect(g,cx,by,sw-44,58*scale,sage,21*scale)
@@ -172,6 +170,18 @@ function scene:create(event)
         return true
     end)
     refreshPhoto()
+end
+-- Native controls do not belong to Composer's display group.
+-- Recreate them whenever this cached scene is shown after login/navigation.
+function scene:show(event)
+    if event.phase=="did" and #fields==0 then
+        local sw=display.safeActualContentWidth or display.contentWidth
+        local sh=display.safeActualContentHeight or display.contentHeight
+        local top=display.safeScreenOriginY or 0
+        local scale=math.min(sw/390,sh/800)
+        field(self.view,"Name or special words",state.words,top+352*scale,88*scale,"words")
+        field(self.view,"What would you like them to hear?",state.success,top+548*scale,92*scale,"success")
+    end
 end
 function scene:hide(event)
     if event.phase=="will" then
@@ -185,6 +195,7 @@ function scene:destroy(event)
     fields={}
 end
 scene:addEventListener("create",scene)
+scene:addEventListener("show",scene)
 scene:addEventListener("hide",scene)
 scene:addEventListener("destroy",scene)
 return scene
