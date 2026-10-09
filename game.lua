@@ -180,8 +180,8 @@ local function buildHintPanel(params)
         local textLeft = panelLeft + 20 + portraitSize
         local textWidth = math.max(80, hintPanel.width - portraitSize - 34)
         local topY = hintPanel.y - hintPanel.height * 0.5 + 14
-        local titleSize = math.max(20, math.min(29, hintPanel.height * 0.18))
-        local bodySize = math.max(17, math.min(22, hintPanel.height * 0.13))
+        local titleSize = math.max(30, math.min(40, hintPanel.height * 0.24))
+        local bodySize = math.max(27, math.min(34, hintPanel.height * 0.19))
 
         levelLabel = display.newText({
             parent = uiGroup, text = tostring(LevelID_return or ""),
@@ -193,7 +193,7 @@ local function buildHintPanel(params)
 
         hintText = display.newText({
             parent = uiGroup,
-            text = "Catch words in order.\\nFlower erases last word.\\nTap to see the words.",
+            text = "Catch words in order.\\nFlower removes a word.\\nTap for a hint.",
             x = textLeft, y = topY + titleSize + 9,
             width = textWidth, font = native.systemFont,
             fontSize = bodySize, align = "left"
@@ -761,8 +761,8 @@ local function updateHintDisplay()
 
     if not hintShowingVerse then
         if memorySpringSample then
-            hintText.text = "Catch words in order.\nFlower erases last word.\nTap to see the words."
-            hintText.size = math.max(17, math.min(22, hintPanel.height * 0.13))
+            hintText.text = "Catch words in order.\nFlower removes a word.\nTap for a hint."
+            hintText.size = math.max(27, math.min(34, hintPanel.height * 0.19))
         else
             hintText.text = hintDefaultText
             fitTextToHeight(hintText, instructionFontSize, 22, hintPanel.height * 0.60)
