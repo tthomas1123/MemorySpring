@@ -303,9 +303,9 @@ local function gotoCustomize()
         return
     end
 
-    logger.scene("game", "gotoCustomize user=", tostring(user), " name=", tostring(name), " prefix=", tostring(classCode), " level=", tostring(level))
+    logger.scene("gameMenu", "gotoGameMenu user=", tostring(user), " name=", tostring(name), " prefix=", tostring(classCode), " level=", tostring(level))
     composer.removeScene("game")
-    composer.gotoScene("customize", {
+    composer.gotoScene("gameMenu", {
         effect = "slideLeft",
         time   = 250,
         params = {
@@ -329,35 +329,21 @@ local function gotoSelectLevel()
         timer.cancel(gameLoopTimer)
         gameLoopTimer = nil
     end
-
     Runtime:removeEventListener("collision", onCollision)
     physics.pause()
+    composer.gotoScene("memorySpringHome", {effect = "slideRight", time = 250})
+end
 
-    composer.removeScene("game")
-    composer.gotoScene("selectLevels", {
-        effect = "slideRight",
-        time   = 250,
-        params = {
-            user   = user,
-            prefix = classCode
-        }
-    })
+local function gotoCustomize()
+    gotoMemorySpringHome()
+end
+
+local function gotoSelectLevel()
+    gotoMemorySpringHome()
 end
 
 local function gotoMenu()
-    logger.scene("game", "gotoMenu user=", tostring(user), " name=", tostring(name))
-
-    if gameLoopTimer then
-        timer.cancel(gameLoopTimer)
-        gameLoopTimer = nil
-    end
-
-    local options = {
-        params = { user = user, name = name }
-    }
-
-    composer.removeScene("game")
-    composer.gotoScene("menu", options)
+    gotoMemorySpringHome()
 end
 
 ------------------------------------------------------------
@@ -909,7 +895,7 @@ local function success()
         if gameLoopTimer then timer.cancel(gameLoopTimer); gameLoopTimer = nil end
         Runtime:removeEventListener("collision", onCollision)
         physics.pause()
-        composer.gotoScene("memorySpringSampleSuccess", {params={title="Abraham Lincoln"}})
+        composer.gotoScene("memorySpringSampleSuccess", {params={title=LevelID_return}})
         return
     end
     logger.scene("game", "success start user=", tostring(user), " prefix=", tostring(Prefix_return or classCode), " level=", tostring(level), " title=", tostring(LevelID_return))
@@ -1175,7 +1161,7 @@ local function startLevelFromRow(levelData)
     header = StandardHeader.new(scene.view, {
         titlePlacement    = "back",
         fallbackTitle     = "",
-        onBack            = gotoCustomize,
+        onBack            = gotoMemorySpringHome,
         backIconImage     = "icons/back.png",
         titleColor        = {1,1,1},
         backLabelFontSize = 34,
