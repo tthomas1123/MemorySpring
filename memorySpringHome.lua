@@ -67,42 +67,23 @@ function scene:create()
     local scale = math.min(width/390, height/800)
 
     fill(display.newRect(g,cx,top+height/2,width+4,height+4),C.cream)
-    -- Quiet botanical edges, like the original illustrated welcome mockup.
-    branch(g,left+4,top+6,scale,false)
-    branch(g,left+width-4,top+12,scale,true)
-    branch(g,left+4,top+height*0.47,scale,false)
+    local background = display.newImageRect(g,"MemorySpringHomeBackground.png",986,1536)
+    if background then
+        local factor = math.max(width/986,height/1536)
+        background.width,background.height = 986*factor,1536*factor
+        background.x,background.y = cx,top+height/2
+    else
+        print("Missing MemorySpringHomeBackground.png beside main.lua")
+    end
 
-    local titleY = safeTop + safeHeight*0.245
-    -- Tiny sprout above the wordmark.
-    local stem = display.newLine(g,cx,titleY-72*scale,cx,titleY-42*scale)
-    stem.strokeWidth=3*scale
-    stem:setStrokeColor(unpack(C.green))
-    leaf(g,cx-12*scale,titleY-65*scale,16*scale,8*scale,38,C.sage)
-    leaf(g,cx+13*scale,titleY-69*scale,16*scale,8*scale,-38,C.green)
-    label(g,"Memory",cx,titleY-14*scale,width-50,57*scale,C.green,"Georgia")
-    label(g,"Spring",cx,titleY+42*scale,width-50,62*scale,C.gold,"Georgia")
+    local titleY = safeTop + safeHeight*0.255
+    label(g,"Memory",cx,titleY-18*scale,width-44,57*scale,C.green,"Georgia")
+    label(g,"Spring",cx,titleY+38*scale,width-44,62*scale,C.gold,"Georgia")
     label(g,"Keep special people\nclose in your heart.",cx,
-        titleY+127*scale,width-55,22*scale,C.ink,"Georgia")
+        titleY+125*scale,width-60,22*scale,C.ink,"Georgia")
 
-    -- Landscape sits behind the sprout; keep clear space for both actions.
-    local groundY = safeBottom - 223*scale
-    fill(display.newCircle(g,cx,groundY-68*scale,90*scale),{1,0.85,0.53},0.26)
-    -- Overlapping ridges provide depth rather than a single flat band.
-    hill(g,cx-width*0.45,groundY+65*scale,width*1.16,160*scale,C.pale,0.32)
-    hill(g,cx+width*0.48,groundY+69*scale,width*1.22,150*scale,C.sage,0.30)
-    hill(g,cx-width*0.24,groundY+104*scale,width*1.14,155*scale,C.sage,0.37)
-    hill(g,cx+width*0.34,groundY+120*scale,width*1.23,155*scale,C.green,0.21)
-    hill(g,cx,groundY+99*scale,width*0.55,85*scale,C.gold,0.18)
-    -- The plant is deliberately above the hills and the buttons.
-    local plantY = groundY + 14*scale
-    local plantStem=display.newLine(g,cx,plantY+20*scale,cx,plantY-52*scale)
-    plantStem.strokeWidth=4*scale
-    plantStem:setStrokeColor(unpack(C.green))
-    leaf(g,cx-23*scale,plantY-45*scale,32*scale,13*scale,30,C.sage)
-    leaf(g,cx+25*scale,plantY-56*scale,36*scale,14*scale,-35,C.green)
-
-    local buttonY = safeBottom - 128*scale
-    local buttonWidth = math.min(width-70*scale,320*scale)
+    local buttonY = safeBottom - 105*scale
+    local buttonWidth = math.min(width-60*scale,330*scale)
     local btn = display.newRoundedRect(g,cx,buttonY,buttonWidth,60*scale,30*scale)
     fill(btn,C.green)
     label(g,"Get Started  →",cx,buttonY,buttonWidth-20,22*scale,{1,1,1},"Georgia")
@@ -115,7 +96,7 @@ function scene:create()
     end)
 
     -- Setup remains accessible, but doesn't compete with the main action.
-    local setup = label(g,"Create a Memory",cx,safeBottom-52*scale,
+    local setup = label(g,"Create a Memory",cx,safeBottom-39*scale,
         width-50,19*scale,C.green,"Georgia")
     setup:addEventListener("tap",function()
         composer.gotoScene("memorySpringSetup",{effect="slideLeft",time=220})
