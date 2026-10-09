@@ -151,9 +151,15 @@ local function buildHintPanel(params)
         hintPanelH,
         18
     )
-    hintPanel:setFillColor(1, 1, 1, 0.92)
-    hintPanel.strokeWidth = 2
-    hintPanel:setStrokeColor(0, 0, 0, 0.15)
+    if memorySpringSample then
+        hintPanel:setFillColor(1, 0.956, 0.889, 0.96) -- warm watercolor cream
+        hintPanel.strokeWidth = 2
+        hintPanel:setStrokeColor(0.73, 0.58, 0.43, 0.55)
+    else
+        hintPanel:setFillColor(1, 1, 1, 0.92)
+        hintPanel.strokeWidth = 2
+        hintPanel:setStrokeColor(0, 0, 0, 0.15)
+    end
     hintPanel:addEventListener("tap", hintPanelTap)
 
     -- Memory Spring sample: large portrait replaces the tiny basket legend.
@@ -174,8 +180,8 @@ local function buildHintPanel(params)
         local textLeft = panelLeft + 20 + portraitSize
         local textWidth = math.max(80, hintPanel.width - portraitSize - 34)
         local topY = hintPanel.y - hintPanel.height * 0.5 + 14
-        local titleSize = math.max(16, math.min(26, hintPanel.height * 0.16))
-        local bodySize = math.max(13, math.min(19, hintPanel.height * 0.115))
+        local titleSize = math.max(20, math.min(29, hintPanel.height * 0.18))
+        local bodySize = math.max(17, math.min(22, hintPanel.height * 0.13))
 
         levelLabel = display.newText({
             parent = uiGroup, text = tostring(LevelID_return or ""),
@@ -187,7 +193,7 @@ local function buildHintPanel(params)
 
         hintText = display.newText({
             parent = uiGroup,
-            text = "Move basket to catch words in order.\\nCatch the flower to erase the last word.\\nTap here to view the words.",
+            text = "Catch words in order.\\nFlower erases last word.\\nTap to see the words.",
             x = textLeft, y = topY + titleSize + 9,
             width = textWidth, font = native.systemFont,
             fontSize = bodySize, align = "left"
@@ -755,8 +761,8 @@ local function updateHintDisplay()
 
     if not hintShowingVerse then
         if memorySpringSample then
-            hintText.text = "Move basket to catch words in order.\nCatch the flower to erase the last word.\nTap here to view the words."
-            hintText.size = math.max(13, math.min(19, hintPanel.height * 0.115))
+            hintText.text = "Catch words in order.\nFlower erases last word.\nTap to see the words."
+            hintText.size = math.max(17, math.min(22, hintPanel.height * 0.13))
         else
             hintText.text = hintDefaultText
             fitTextToHeight(hintText, instructionFontSize, 22, hintPanel.height * 0.60)
