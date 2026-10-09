@@ -78,24 +78,15 @@ local function refreshPhoto()
         return true
     end)
 end
-local function field(parent,title,value,y,h,key,example)
+local function field(parent,title,value,y,h,key)
     local sw=display.safeActualContentWidth or display.contentWidth
     local cx=display.contentCenterX
-    label(parent,title,cx,y-44,sw-54,20,ink,true)
+    label(parent,title,cx,y-43,sw-54,20,ink,true)
     local backing=rect(parent,cx,y+15,sw-44,h,{1,0.985,0.956},14)
     backing.strokeWidth=1.5
     backing:setStrokeColor(0.72,0.62,0.49)
-    local input
-    if key=="words" then
-        -- Single-line field avoids the desktop simulator's textbox scroll arrows.
-        input=native.newTextField(cx,y+15,sw-66,math.min(52,h-12))
-        input.placeholder=example
-    else
-        -- Multiline encouragement still needs a native textbox on iOS/Android.
-        input=native.newTextBox(cx,y+15,sw-66,h-14)
-        input.isEditable=true
-        label(parent,example,cx,y+h/2+35,sw-56,15,muted,false)
-    end
+    local input=native.newTextBox(cx,y+15,sw-64,h-16)
+    input.isEditable=true
     input.hasBackground=false
     input.font=native.newFont(native.systemFont,22)
     input.text=value or ""
@@ -168,10 +159,10 @@ function scene:create(event)
     self.photoY=top+212*scale
 
     label(g,"2  WORDS TO REMEMBER",cx,top+284*scale,sw-40,16*scale,gold,true)
-    field(g,"Name or special words",state.words,top+352*scale,72*scale,"words","Kind, Funny, Loving")
+    field(g,"Name or special words",state.words,top+352*scale,88*scale,"words")
 
     label(g,"3  MESSAGE OF ENCOURAGEMENT",cx,top+483*scale,sw-40,16*scale,gold,true)
-    field(g,"What would you like them to hear?",state.success,top+548*scale,92*scale,"success","Example: You are loved, always.")
+    field(g,"What would you like them to hear?",state.success,top+548*scale,92*scale,"success")
 
     local by=top+sh-47*scale
     local button=rect(g,cx,by,sw-44,58*scale,sage,21*scale)
