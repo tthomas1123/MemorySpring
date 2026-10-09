@@ -25,7 +25,9 @@ local function label(group, value, x, y, width, size, color, font)
     return obj
 end
 local function leaf(group, x, y, rx, ry, rotation, color, alpha)
-    local l = display.newEllipse(group, x, y, rx * 2, ry * 2)
+    local l = display.newCircle(group, x, y, math.max(rx, ry))
+    l.xScale = rx / math.max(rx, ry)
+    l.yScale = ry / math.max(rx, ry)
     l.rotation = rotation
     fill(l, color, alpha)
     return l
@@ -44,7 +46,9 @@ local function branch(group, x, y, scale, mirrored)
     end
 end
 local function hill(group, x, y, width, height, color, alpha)
-    local shape = display.newEllipse(group,x,y,width,height)
+    local shape = display.newCircle(group,x,y,math.max(width,height)/2)
+    shape.xScale = width / math.max(width,height)
+    shape.yScale = height / math.max(width,height)
     fill(shape,color,alpha)
     return shape
 end
