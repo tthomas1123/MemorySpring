@@ -1,3 +1,11 @@
+-- Memory Spring prototype entry point. Legacy SmartSheep flow remains below for rollback.
+local MEMORY_SPRING_LOCAL_PROTOTYPE = true
+if MEMORY_SPRING_LOCAL_PROTOTYPE then
+    display.setStatusBar(display.HiddenStatusBar)
+    require("composer").gotoScene("memorySpringSetup")
+    return
+end
+
 ------------------------------------------------------------
 -- main.lua
 -- SmartSheep Main Entry with Localization + Entitlement Init
