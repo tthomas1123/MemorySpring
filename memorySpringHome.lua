@@ -23,7 +23,7 @@ function scene:create()
  txt(g,"✿",cx,top+h*0.30,170,84,C.green,true)
  txt(g,"MEMORY SPRING",cx,top+h*0.12,display.safeActualContentWidth-30,27,C.green,true)
  txt(g,"A moment to remember",cx,top+h*0.51,display.safeActualContentWidth-30,24,C.ink,true)
- txt(g,"Gentle play. Familiar memories.\\nAlways a reason to smile.",cx,top+h*0.60,display.safeActualContentWidth-45,17,C.green,false)
+ txt(g,"Gentle play. Familiar memories.\nAlways a reason to smile.",cx,top+h*0.60,display.safeActualContentWidth-45,17,C.green,false)
  button(g,"Get Started",top+h*0.76,C.green,function() composer.gotoScene("memorySpringDemo",{effect="slideLeft",time=220}) end)
  button(g,"Setup",top+h*0.87,C.gold,function() composer.gotoScene("memorySpringSetup",{effect="slideLeft",time=220}) end)
 end
