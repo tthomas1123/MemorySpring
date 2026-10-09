@@ -12,7 +12,7 @@ local muted = {0.43,0.49,0.44}
 local gold = {0.77,0.59,0.34}
 local state = {words="", success="", photo=false}
 local fields = {}
-local photoGroup, feedback, previewGroup
+local photoGroup, feedback, previewGroup, fieldGroup
 local function load()
     local path = system.pathForFile(filename,system.DocumentsDirectory)
     local f = path and io.open(path,"r")
@@ -179,8 +179,10 @@ function scene:show(event)
         local sh=display.safeActualContentHeight or display.contentHeight
         local top=display.safeScreenOriginY or 0
         local scale=math.min(sw/390,sh/800)
-        field(self.view,"Name or special words",state.words,top+352*scale,88*scale,"words")
-        field(self.view,"What would you like them to hear?",state.success,top+548*scale,92*scale,"success")
+        fieldGroup=display.newGroup()
+        self.view:insert(fieldGroup)
+        field(fieldGroup,"Name or special words",state.words,top+352*scale,88*scale,"words")
+        field(fieldGroup,"What would you like them to hear?",state.success,top+548*scale,92*scale,"success")
     end
 end
 function scene:hide(event)
@@ -188,11 +190,15 @@ function scene:hide(event)
         sync()
         for _,input in ipairs(fields) do display.remove(input) end
         fields={}
+        clearGroup(fieldGroup)
+        fieldGroup=nil
     end
 end
 function scene:destroy(event)
     for _,input in ipairs(fields) do display.remove(input) end
     fields={}
+    clearGroup(fieldGroup)
+    fieldGroup=nil
 end
 scene:addEventListener("create",scene)
 scene:addEventListener("show",scene)
