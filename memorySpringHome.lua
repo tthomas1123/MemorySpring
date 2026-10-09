@@ -72,33 +72,34 @@ function scene:create()
     branch(g,left+width-4,top+12,scale,true)
     branch(g,left+4,top+height*0.47,scale,false)
 
-    local titleY = safeTop + safeHeight*0.27
+    local titleY = safeTop + safeHeight*0.265
     -- Tiny sprout above the wordmark.
     local stem = display.newLine(g,cx,titleY-72*scale,cx,titleY-42*scale)
     stem.strokeWidth=3*scale
     stem:setStrokeColor(unpack(C.green))
     leaf(g,cx-12*scale,titleY-65*scale,16*scale,8*scale,38,C.sage)
     leaf(g,cx+13*scale,titleY-69*scale,16*scale,8*scale,-38,C.green)
-    label(g,"Memory",cx,titleY-14*scale,width-50,55*scale,C.green,native.systemFont)
-    label(g,"Spring",cx,titleY+42*scale,width-50,59*scale,C.gold,native.systemFont)
+    label(g,"Memory",cx,titleY-14*scale,width-50,59*scale,C.green,native.systemFont)
+    label(g,"Spring",cx,titleY+42*scale,width-50,63*scale,C.gold,native.systemFont)
     label(g,"Keep special people\nclose in your heart.",cx,
         titleY+127*scale,width-55,23*scale,C.ink,native.systemFont)
 
-    -- Soft sunrise and layered rolling hills behind a young sprout.
-    local groundY = safeTop + safeHeight*0.82
-    fill(display.newCircle(g,cx,groundY-80*scale,92*scale),{1,0.85,0.53},0.32)
-    hill(g,cx-width*0.32,groundY+55*scale,width*1.08,190*scale,C.pale,0.57)
-    hill(g,cx+width*0.38,groundY+70*scale,width*1.17,195*scale,C.sage,0.48)
-    hill(g,cx,groundY+115*scale,width*1.35,170*scale,C.green,0.33)
-    hill(g,cx,groundY+118*scale,width*0.55,88*scale,C.gold,0.18)
-    local plantY=groundY+24*scale
-    local plantStem=display.newLine(g,cx,plantY+18*scale,cx,plantY-52*scale)
+    -- Landscape sits behind the sprout; keep clear space for both actions.
+    local groundY = safeBottom - 198*scale
+    fill(display.newCircle(g,cx,groundY-70*scale,78*scale),{1,0.85,0.53},0.26)
+    hill(g,cx-width*0.32,groundY+70*scale,width*1.08,145*scale,C.pale,0.47)
+    hill(g,cx+width*0.38,groundY+80*scale,width*1.17,150*scale,C.sage,0.40)
+    hill(g,cx,groundY+120*scale,width*1.35,140*scale,C.green,0.26)
+    hill(g,cx,groundY+85*scale,width*0.55,75*scale,C.gold,0.13)
+    -- The plant is deliberately above the hills and the buttons.
+    local plantY = groundY + 14*scale
+    local plantStem=display.newLine(g,cx,plantY+20*scale,cx,plantY-52*scale)
     plantStem.strokeWidth=4*scale
     plantStem:setStrokeColor(unpack(C.green))
     leaf(g,cx-23*scale,plantY-45*scale,32*scale,13*scale,30,C.sage)
     leaf(g,cx+25*scale,plantY-56*scale,36*scale,14*scale,-35,C.green)
 
-    local buttonY = safeBottom - 75*scale
+    local buttonY = safeBottom - 109*scale
     local buttonWidth = math.min(width-52*scale,340*scale)
     local btn = display.newRoundedRect(g,cx,buttonY,buttonWidth,66*scale,32*scale)
     fill(btn,C.green)
@@ -112,7 +113,7 @@ function scene:create()
     end)
 
     -- Setup remains accessible, but doesn't compete with the main action.
-    local setup = label(g,"Create a Memory",cx,safeBottom-23*scale,
+    local setup = label(g,"Create a Memory",cx,safeBottom-37*scale,
         width-50,15*scale,C.green,native.systemFont)
     setup:addEventListener("tap",function()
         composer.gotoScene("memorySpringSetup",{effect="slideLeft",time=220})
