@@ -81,10 +81,26 @@ local assistLoopCount    = 0
 local assistMaxIndex     = 0
 local ASSIST_EVERY_LOOPS = 25
 
+-- UI references
+local hintPanel, hintText, levelLabel
+local header
+local orderLabels = {}
+local progressLabel
+local praiseLabel
+local profilePhoto
+local memoryProfile = {}
+local encouragements = {
+    "Great job!",
+    "Nice work!",
+    "You're doing well!",
+    "Excellent!",
+    "Keep it up!",
+    "Wonderful!",
+    "That's right!"
+}
+
 -- Hint behavior state
-
-local hintDefaultText = languages.t("hint_instruction") or "Move basket to catch words in order."
-
+local hintDefaultText = languages.t("hint_instruction") or "Hint: Catch the next words. Tap the panel to read the full verse."
 local hintShowingVerse    = false
 local hintWindowStartIndex = 1
 local HINT_WINDOW_SIZE     = 7
@@ -99,153 +115,8 @@ local onCollision
 local isCurrentTextCorrectPrefix
 local fitCollectedVerseText
 local updateCollectedVerseDisplay
-local hintPanelTap
-local hintPanel, hintText, levelLabel
-local hintBasket, hintEraser, hintLegend, hintTap
-local EraserWord
-local instructionFontSize = 26
+local updateOrderStrip
 
-local function getEraserSheet()
-
-    local sheetOptions1 =
-    {
-        frames =
-        {
-            { x = 0, y = 0, width = 220,  height = 210  },
-            { x = 0, y = 0, width = 1300, height = 1010 },
-        }
-    }
-
-    local eraserFile
-    if (ThemeLabel == nil or ThemeLabel == "") then
-        eraserFile = "themes/Original-eraser.png"
-    else
-        eraserFile = "themes/" .. ThemeLabel .. "-eraser.png"
-    end
-
-    local imageSheetPath = system.pathForFile(eraserFile, system.ResourceDirectory)
-    if imageSheetPath == nil then
-        print("⚠️ Could not find eraser file at path: " .. tostring(eraserFile))
-        eraserFile = "original/eraser.png"
-    end
-
-    return graphics.newImageSheet(eraserFile, sheetOptions1)
-end
-
-local function buildHintPanel(params)
-    local uiGroup = params.uiGroup
-    local headerGroup = params.headerGroup
-    local objectSheet2 = params.objectSheet2
-    local hintPanelY = params.hintPanelY
-    local hintPanelH = params.hintPanelH
-    local safeX = params.safeX
-    local safeW = params.safeW
-    local localizedEraser = params.localizedEraser
-
-    hintPanel = display.newRoundedRect(
-        uiGroup,
-        safeX + safeW * 0.5,
-        hintPanelY,
-        safeW * 0.92,
-        hintPanelH,
-        18
-    )
-    hintPanel:setFillColor(1, 1, 1, 0.92)
-    hintPanel.strokeWidth = 2
-    hintPanel:setStrokeColor(0, 0, 0, 0.15)
-    hintPanel:addEventListener("tap", hintPanelTap)
-
-    levelLabel = display.newText({
-        parent = uiGroup,
-        text = tostring(LevelID_return or ""),
-        x = hintPanel.x - hintPanel.width * 0.5 + 18,
-        y = hintPanel.y - hintPanel.height * 0.33,
-        width = hintPanel.width - 36,
-        font = native.systemFontBold,
-        fontSize = 36,
-        align = "left"
-    })
-    levelLabel.anchorX = 0
-    levelLabel:setFillColor(unpack(colors.textOnLight))
-
-    hintBasket = display.newImageRect(uiGroup, objectSheet2, 2, 56, 56)
-    hintBasket.anchorX = 0
-    hintBasket.anchorY = 0.5
-    hintBasket.x = hintPanel.x - hintPanel.width * 0.5 + 18
-    hintBasket.y = hintPanel.y - hintPanel.height * 0.10
-
-    hintText = display.newText({
-        parent = uiGroup,
-        text = hintDefaultText,
-        x = hintBasket.x + 64,
-        y = hintPanel.y - hintPanel.height * 0.07,
-        width = hintPanel.width - 100,
-        font = native.systemFont,
-        fontSize = instructionFontSize,
-        align = "left"
-    })
-    hintText.anchorX = 0
-    hintText:setFillColor(unpack(colors.textOnLight))
-    hintText:addEventListener("tap", hintPanelTap)
-
-    local legendY = hintPanel.y + hintPanel.height * 0.28
-
-    hintEraser = display.newImageRect(uiGroup, getEraserSheet(), 1, 72, 72)
-    hintEraser.anchorX = 0
-    hintEraser.anchorY = 0.5
-    hintEraser.x = hintPanel.x - hintPanel.width * 0.5 + 35
-    hintEraser.y = legendY - hintPanel.height * 0.04
-
-    local removeHint = string.format(
-        languages.t("hint_remove_last_word") or "Catch %s to erase the last word.",
-        localizedEraser or "eraser"
-    )
-
-    hintLegend = display.newText({
-        parent = uiGroup,
-        text = removeHint,
-        x = hintEraser.x + 52,
-        y = legendY - hintPanel.height * 0.14,
-        width = hintPanel.width - 100,
-        font = native.systemFont,
-        fontSize = instructionFontSize,
-        align = "left"
-    })
-    hintLegend.anchorX = 0
-    hintLegend.anchorY = 0.5
-    hintLegend:setFillColor(unpack(colors.textOnLight))
-
-    if hintLegend.contentHeight > instructionFontSize * 1.6 then
-        hintLegend.y = hintLegend.y + 10
-    end
-
-    hintTap = display.newText({
-        parent = uiGroup,
-        text = languages.t("hint_tap_panel") or "Tap this panel to view the verse.",
-        x = hintEraser.x + 52,
-        y = hintLegend.y + (hintLegend.contentHeight * 0.5) + 30,
-        width = hintPanel.width - 100,
-        font = native.systemFont,
-        fontSize = instructionFontSize,
-        align = "left"
-    })
-    hintTap.anchorX = 0
-    hintTap.anchorY = 0.5
-    hintTap:setFillColor(unpack(colors.textOnLight))
-
-    if hintLegend.contentHeight > instructionFontSize * 1.6 then
-        hintTap.y = hintTap.y - 13
-    end
-
-    headerGroup:toFront()
-    hintPanel:toFront()
-    levelLabel:toFront()
-    hintBasket:toFront()
-    hintText:toFront()
-    hintEraser:toFront()
-    hintLegend:toFront()
-    hintTap:toFront()
-end
 ------------------------------------------------------------
 -- Helpers: safe center / clamp / text fitting / truncation
 ------------------------------------------------------------
@@ -431,9 +302,9 @@ local function gotoCustomize()
         return
     end
 
-    logger.scene("gameMenu", "gotoGameMenu user=", tostring(user), " name=", tostring(name), " prefix=", tostring(classCode), " level=", tostring(level))
+    logger.scene("game", "gotoCustomize user=", tostring(user), " name=", tostring(name), " prefix=", tostring(classCode), " level=", tostring(level))
     composer.removeScene("game")
-    composer.gotoScene("gameMenu", {
+    composer.gotoScene("customize", {
         effect = "slideLeft",
         time   = 250,
         params = {
@@ -602,15 +473,14 @@ local function showHintModal()
 
     local fullVerse = tostring(Text_return or (originalVerse and originalVerse.text) or "")
 
-    local fullVerse = tostring(Text_return or ""):gsub("\n\n+", "\n")
-
     hintModalText = display.newText({
         text = fullVerse,
+        x = 0,
+        y = 0,
         width = bodyWidth - 24,
         font = native.systemFont,
         fontSize = 34,
-        align = "left",
-        lineHeight = .9
+        align = "left"
     })
     hintModalText.anchorX = 0
     hintModalText.anchorY = 0
@@ -750,6 +620,46 @@ updateCollectedVerseDisplay = function()
 end
 
 ------------------------------------------------------------
+-- Memory Spring order/progress strip
+------------------------------------------------------------
+updateOrderStrip = function()
+    local progress = getCorrectProgress()
+    for i, label in ipairs(orderLabels or {}) do
+        if label and label.removeSelf then
+            if i <= progress then
+                label:setFillColor(0.55, 0.72, 0.43)
+                label.strokeWidth = 0
+                label.xScale, label.yScale = 1, 1
+                if label.textObject then label.textObject:setFillColor(1, 1, 1) end
+            elseif i == progress + 1 then
+                label:setFillColor(0.95, 0.98, 1.00)
+                label.strokeWidth = 3
+                label:setStrokeColor(0.20, 0.56, 0.35)
+                label.xScale, label.yScale = 1.06, 1.06
+                if label.textObject then label.textObject:setFillColor(0.10, 0.25, 0.52) end
+            else
+                label:setFillColor(0.88, 0.91, 0.97)
+                label.strokeWidth = 0
+                label.xScale, label.yScale = 1, 1
+                if label.textObject then label.textObject:setFillColor(0.40, 0.43, 0.58) end
+            end
+        end
+    end
+    if progressLabel then
+        local currentWord = math.min(progress + 1, #expectedWords)
+        progressLabel.text = "Word\n" .. tostring(currentWord) .. " of " .. tostring(#expectedWords)
+        if progress >= #expectedWords and #expectedWords > 0 then
+            progressLabel.text = "Complete\n" .. tostring(#expectedWords) .. " of " .. tostring(#expectedWords)
+        end
+    end
+
+    if praiseLabel and progress > 0 then
+        local praiseIndex = ((progress - 1) % #encouragements) + 1
+        praiseLabel.text = "★   " .. encouragements[praiseIndex]
+    end
+end
+
+------------------------------------------------------------
 -- Hint UI logic
 ------------------------------------------------------------
 local function updateHintDisplay()
@@ -757,12 +667,7 @@ local function updateHintDisplay()
 
     if not hintShowingVerse then
         hintText.text = hintDefaultText
-        fitTextToHeight(hintText, instructionFontSize, 22, hintPanel.height * 0.60)
-        if hintBasket then hintBasket.isVisible = true end
-        if hintEraser then hintEraser.isVisible = true end
-        if hintLegend then hintLegend.isVisible = true end
-
-        if hintTap then hintTap.isVisible = true end
+        fitTextToHeight(hintText, 42, 22, hintPanel.height * 0.60)
         return
     end
 
@@ -770,7 +675,7 @@ local function updateHintDisplay()
 
     if #allWords == 0 then
         hintText.text = ""
-        fitTextToHeight(hintText, instructionFontSize, 24, hintPanel.height * 0.60)
+        fitTextToHeight(hintText, 42, 24, hintPanel.height * 0.60)
         return
     end
 
@@ -787,14 +692,9 @@ local function updateHintDisplay()
         preview = preview .. " ..."
     end
 
-    if hintBasket then hintBasket.isVisible = false end
-    if hintEraser then hintEraser.isVisible = false end
-    if hintLegend then hintLegend.isVisible = false end
-    if hintTap then hintTap.isVisible = false end
     hintText.text = preview
-    fitTextToHeight(hintText, instructionFontSize, 24, hintPanel.height * 0.60)
+    fitTextToHeight(hintText, 42, 24, hintPanel.height * 0.60)
 end
-
 
 local function gotoHint()
     hintShowingVerse = not hintShowingVerse
@@ -809,7 +709,7 @@ local function bottomPanelTap(event)
     return true
 end
 
-hintPanelTap = function(event)
+local function hintPanelTap(event)
     if hintShowingVerse then
         logger.scene("game", "hintPanelTap opening modal")
         showHintModal()
@@ -856,20 +756,6 @@ local function loadWord(tbl)
 
     removeInactiveWindowWords(startIndex, endIndex)
 
-    for idx, obj in pairs(activeWordByIndex) do
-    if not obj
-        or not obj.removeSelf
-        or obj.x < -120
-        or obj.x > display.contentWidth + 120
-        or obj.y < -180
-        or obj.y > display.contentHeight + 120
-    then
-        activeWordByIndex[idx] = nil
-        removeWordObjectFromTables(obj)
-        display.remove(obj)
-    end
-end
-
     for i = startIndex, endIndex do
         local wordData = tbl[i]
 
@@ -894,18 +780,13 @@ end
                 strictCollectionEnabled = true
             end
 
-            local newWord = display.newText(wordData.text, 1, 1, native.systemFontBold, 34)
-            newWord:setFillColor(0, 0, 0.7)
+            local newWord = display.newText(wordData.text, 1, 1, native.systemFontBold, 36)
+            newWord:setFillColor(0.02, 0.10, 0.48)
+            newWord.strokeWidth = 3
+            newWord:setStrokeColor(1, 1, 1, 0.98)
             mainGroup:insert(newWord)
 
-            physics.addBody(newWord, {
-                radius = 18,
-                bounce = 1.1,
-                friction = 0,
-                density = 1
-            })
-
-            newWord.isFixedRotation = true
+            physics.addBody(newWord, "dynamic", { radius = 40, bounce = 0.8 })
             newWord.myName = "word"
             newWord.wordIndex = i
             newWord.wordText = wordData.text
@@ -913,24 +794,17 @@ end
             table.insert(wordsTable, newWord)
             activeWordByIndex[i] = newWord
 
-           newWord.x = math.random(60, display.contentWidth - 60)
-            newWord.y = -60
-
-            local direction = 1
-            if newWord.x > display.contentCenterX then
-                direction = -1
-            end
-
-            newWord:setLinearVelocity(
-                direction * math.random(80, 140),
-                math.random(60, 110)
-            )
+            local safeX, safeW = safeXW()
+            local topY = basket and (basket.minGameY or 260) or 260
+            local bottomY = basket and (basket.maxGameY or display.contentHeight - 220) or display.contentHeight - 220
+            newWord.x = math.random(math.floor(safeX + 55), math.floor(safeX + safeW - 55))
+            newWord.y = math.random(math.floor(topY), math.floor(math.max(topY + 20, bottomY - 70)))
+            newWord:setLinearVelocity(math.random(-25, 25), math.random(18, 38))
         end
     end
 end
 
 local function loadFlower()
-    local objectSheet = getEraserSheet()
     local sheetOptions1 =
     {
         frames =
@@ -956,31 +830,26 @@ local function loadFlower()
 
     local objectSheet = graphics.newImageSheet(eraserFile, sheetOptions1)
 
-    local newFlower = display.newImageRect(mainGroup, objectSheet, 1, 120, 120)
+    local newFlower = display.newImageRect(mainGroup, objectSheet, 1, 86, 86)
     table.insert(wordsTable, newFlower)
 
-    physics.addBody(newFlower, {
-        radius = 18,
-        bounce = 1.1,
-        friction = 0,
-        density = 1
-    })
-
-    newFlower.isFixedRotation = true
+    physics.addBody(newFlower, "dynamic", { radius = 30, bounce = 0.8 })
     newFlower.myName = "flower"
 
-   newFlower.x = math.random(60, display.contentWidth - 60)
-    newFlower.y = -60
-
-    local direction = 1
-    if newFlower.x > display.contentCenterX then
-        direction = -1
+    local whereFrom = math.random(3)
+    if whereFrom == 1 then
+        newFlower.x = -60
+        newFlower.y = math.random(500)
+        newFlower:setLinearVelocity(math.random(40, 120), math.random(20, 60))
+    elseif whereFrom == 2 then
+        newFlower.x = math.random(display.contentWidth)
+        newFlower.y = -60
+        newFlower:setLinearVelocity(math.random(-40, 40), math.random(40, 120))
+    else
+        newFlower.x = display.contentWidth + 60
+        newFlower.y = math.random(500)
+        newFlower:setLinearVelocity(math.random(-120, -40), math.random(20, 60))
     end
-
-    newFlower:setLinearVelocity(
-        direction * math.random(80, 140),
-        math.random(60, 110)
-    )
 end
 
 local function moveBasket(event)
@@ -996,8 +865,12 @@ local function moveBasket(event)
     elseif target.isFocus and phase == "moved" then
         local ox = target.touchOffsetX or 0
         local oy = target.touchOffsetY or 0
-        target.x = event.x - ox
-        target.y = event.y - oy
+        target.x = clamp(event.x - ox, target.minGameX or 0, target.maxGameX or display.contentWidth)
+        target.y = clamp(event.y - oy, target.minGameY or 0, target.maxGameY or display.contentHeight)
+        if progressLabel then
+            progressLabel.x = target.x
+            progressLabel.y = target.y + 18
+        end
 
     elseif target.isFocus and (phase == "ended" or phase == "cancelled") then
         display.currentStage:setFocus(nil)
@@ -1011,12 +884,12 @@ end
 
 local function gameLoop(tbl)
     loadWord(tbl)
-    loadFlower(); --loadFlower(); loadFlower()
+  --  loadFlower(); loadFlower(); loadFlower()
 
     for i = #wordsTable, 1, -1 do
         local obj = wordsTable[i]
-       if obj and obj.y > display.contentHeight + 100 then
-        removeWordObjectFromTables(obj)
+        if obj and (obj.x < -100 or obj.x > display.contentWidth + 100 or obj.y < -100 or obj.y > display.contentHeight + 100) then
+            removeWordObjectFromTables(obj)
             display.remove(obj)
         end
     end
@@ -1120,6 +993,7 @@ onCollision = function(event)
         logger.scene("game", "tryEraseLastWord erased with protection enabled because prefix incorrect lastIndex=", tostring(lastIndex))
         table.remove(verseTextTable, lastIndex)
         updateCollectedVerseDisplay()
+        updateOrderStrip()
         updateHintWindowProgress()
         updateAssistState()
         refreshHintIfNeeded()
@@ -1140,6 +1014,7 @@ onCollision = function(event)
         logger.scene("game", "collectWordObject wordIndex=", tostring(wordObj.wordIndex), " word=", tostring(wordObj.wordText))
         table.insert(verseTextTable, wordObj.wordText .. " ")
         updateCollectedVerseDisplay()
+        updateOrderStrip()
         updateHintWindowProgress()
 
         activeWordByIndex[wordObj.wordIndex] = nil
@@ -1210,11 +1085,6 @@ local function startLevelFromRow(levelData)
     ThemeLabel     = levelData.ThemeID or ThemeLabel
     Prefix_return  = Prefix_return or classCode or ""
 
-    EraserWord = levelData.EraserWord or "eraser"
-
-    local eraserKey = "eraser_" .. string.lower(EraserWord or "flower")
-    local localizedEraser = languages.t(eraserKey)
-
     logger.scene(
         "game",
         "startLevelFromRow title=", tostring(LevelID_return),
@@ -1264,169 +1134,194 @@ local function startLevelFromRow(levelData)
     basket.x = display.contentCenterX
     basket.y = display.contentHeight - 300
     basket:addEventListener("touch", moveBasket)
-  --  physics.addBody(basket, { radius = 30, isSensor = true })
-    physics.addBody(basket, "kinematic", {
-    radius = 30,
-    isSensor = true
-})
+    physics.addBody(basket, { radius = 30, isSensor = true })
     basket.myName = "basket"
 
     --------------------------------------------------------
-    -- UI: clear old children
+    -- Memory Spring UI
     --------------------------------------------------------
     if uiGroup and uiGroup.numChildren then
         for i = uiGroup.numChildren, 1, -1 do
             display.remove(uiGroup[i])
         end
     end
-
-    local headerGroup = display.newGroup()
-    uiGroup:insert(headerGroup)
+    orderLabels = {}
+    progressLabel = nil
+    praiseLabel = nil
 
     local safeX, safeW = safeXW()
     local safeY = display.safeScreenOriginY or 0
+    local safeH = display.safeActualContentHeight or display.contentHeight
+    local cx = safeX + safeW * 0.5
 
-    local headerH = math.floor(display.contentHeight * 0.11)
-    local headerCenterY = safeY + headerH * 0.5
-
-    local headerBar = display.newRect(headerGroup, safeX + safeW * 0.5, headerCenterY, safeW, headerH)
-    local bg = colors.appBackgroundSoft or { 1, 1, 1 }
-    headerBar:setFillColor(bg[1], bg[2], bg[3], 0.28)
-    headerBar:toBack()
-
-    local headerDivider = display.newRect(
-        headerGroup,
-        safeX + safeW * 0.5,
-        safeY + headerH,
-        safeW,
-        1
-    )
-    headerDivider:setFillColor(0, 0, 0, 0.10)
-    headerDivider:toBack()
+    -- Compact blue header
+    local headerH = math.max(48, math.floor(safeH * 0.055))
+    local headerBar = display.newRect(uiGroup, cx, safeY + headerH * 0.5, safeW, headerH)
+    headerBar:setFillColor(0.16, 0.23, 0.58, 0.96)
 
     header = StandardHeader.new(scene.view, {
         titlePlacement    = "back",
         fallbackTitle     = "",
         onBack            = gotoCustomize,
         backIconImage     = "icons/back.png",
-        titleColor        = colors.textPrimary,
-        backLabelFontSize = 44,
-        backLabelGap      = 8,
+        titleColor        = {1,1,1},
+        backLabelFontSize = 34,
+        backLabelGap      = 6,
     })
-    logger.scene("game", "header created")
 
     local hintBtn = accessibleButton.new(
-        headerGroup,
-        languages.t("hint") or "Hint",
-        safeCenterX(),
-        headerCenterY,
-        colors.secondaryAction,
-        function()
-            logger.scene("game", "hint button tapped")
-            gotoHint()
-        end,
-        "",
-        0.7
-    )
-
-    timer.performWithDelay(1, function()
-        if not hintBtn then return end
-
-        local btnW = 220
-        if hintBtn.front and hintBtn.front.width then
-            btnW = hintBtn.front.width
-        end
-
-        local approxBackContentRight = safeX + math.floor(safeW * 0.28)
-        local leftClear  = approxBackContentRight + 24 + (btnW * 0.5)
-        local rightClear = safeX + safeW - 24 - (btnW * 0.5)
-
-        hintBtn.x = clamp(safeCenterX(), leftClear, rightClear)
-    end)
-
-    --------------------------------------------------------
-    -- Always-visible hint panel under header
-    --------------------------------------------------------
-    local hintPanelH = math.floor(display.contentHeight * 0.18)
-local hintPanelY = (safeY + headerH) + hintPanelH * 0.5 + math.floor(display.contentHeight * 0.01)
-
-buildHintPanel({
-    uiGroup = uiGroup,
-    headerGroup = headerGroup,
-    objectSheet2 = objectSheet2,
-    hintPanelY = hintPanelY,
-    hintPanelH = hintPanelH,
-    safeX = safeX,
-    safeW = safeW,
-    localizedEraser = localizedEraser
-})
-
-   
-
-    --------------------------------------------------------
-    -- Bottom collection panel + thin dark footer bar above it
-    --------------------------------------------------------
-    local bottomPanelH = math.floor(display.contentHeight * 0.13)
-    bottomPanel = display.newRoundedRect(
         uiGroup,
-        display.contentCenterX,
-        display.contentHeight - bottomPanelH * 0.5 - math.floor(display.contentHeight * 0.03),
-        safeW * 0.92,
-        bottomPanelH,
-        18
+        languages.t("hint") or "Hint",
+        cx,
+        safeY + headerH * 0.5,
+        {0.80, 0.90, 0.96},
+        function() gotoHint() end,
+        "",
+        0.52
     )
-    bottomPanel:setFillColor(1, 1, 1, 0.92)
-    bottomPanel.strokeWidth = 2
-    bottomPanel:setStrokeColor(0, 0, 0, 0.15)
-    bottomPanelExpanded = false
-    bottomPanel:addEventListener("tap", bottomPanelTap)
 
-    if basket and bottomPanel then
-        local pad = math.floor(display.contentHeight * 0.02)
-        local topOfBottomPanel = bottomPanel.y - (bottomPanel.height * 0.5)
+    -- Profile card
+    local cardTop = safeY + headerH + 7
+    local profileH = math.floor(safeH * 0.215)
+    local profileCard = display.newRoundedRect(uiGroup, cx, cardTop + profileH * 0.5, safeW * 0.97, profileH, 18)
+    profileCard:setFillColor(0.77, 0.86, 0.98, 0.97)
+    profileCard.strokeWidth = 1
+    profileCard:setStrokeColor(0.54, 0.67, 0.88)
 
-        basket.y = topOfBottomPanel - (basket.height * 0.5) - pad
-
-        local minY = (hintPanel and (hintPanel.y + hintPanel.height * 0.5) or 0) + basket.height * 0.6
-        if basket.y < minY then basket.y = minY end
+    local photoSize = profileH * 0.72
+    local photoX = safeX + 22 + photoSize * 0.5
+    local photoY = profileCard.y
+    local photoFile = memoryProfile.photo or "memoryspring/profile.png"
+    if system.pathForFile(photoFile, system.ResourceDirectory) then
+        profilePhoto = display.newImageRect(uiGroup, photoFile, photoSize, photoSize)
+        profilePhoto.x, profilePhoto.y = photoX, photoY
+    else
+        profilePhoto = display.newCircle(uiGroup, photoX, photoY, photoSize * 0.5)
+        profilePhoto:setFillColor(0.91, 0.94, 0.98)
+        local initials = display.newText({parent=uiGroup, text=memoryProfile.initials or "ET", x=photoX, y=photoY, font=native.systemFontBold, fontSize=36})
+        initials:setFillColor(0.24, 0.34, 0.63)
     end
 
-    local footerBarH = math.floor(display.contentHeight * 0.018)
-    local footerBarY = (bottomPanel.y - bottomPanel.height * 0.5) - (footerBarH * 0.5) - 6
+    local tx = photoX + photoSize * 0.62
+    local tw = safeX + safeW - 18 - tx
+    local pname = display.newText({parent=uiGroup, text=memoryProfile.name or name or "Emma Thomas", x=tx, y=cardTop+22, width=tw, font=native.systemFontBold, fontSize=25, align="left"})
+    pname.anchorX, pname.anchorY = 0, 0
+    pname:setFillColor(0.16, 0.23, 0.58)
 
-    local footerBar = display.newRect(
-        uiGroup,
-        safeX + safeW * 0.5,
-        footerBarY,
-        safeW,
-        footerBarH
-    )
-    footerBar:setFillColor(0, 0, 0, 0.10)
+    local facts = memoryProfile.facts or {
+        "Son",
+        "Lives here in Orland, California",
+        "Birthday September 8, 1972",
+        "Loves fishing and cars",
+        "Loves to BBQ",
+        "Happily Married to Tina",
+        "Steve's Daughters Allison and Emma"
+    }
+    local factText = table.concat(facts, "\n")
+    local factObj = display.newText({parent=uiGroup, text=factText, x=tx, y=cardTop+55, width=tw, font=native.systemFont, fontSize=28, align="left"})
+    factObj.anchorX, factObj.anchorY = 0, 0
+    factObj:setFillColor(0.20, 0.27, 0.55)
 
-    --------------------------------------------------------
-    -- Verse data holders
-    --------------------------------------------------------
-    originalVerse = display.newText(
-        uiGroup,
-        tostring(Text_return or ""),
-        0, 0, display.contentWidth, 0, native.systemFont, 1
-    )
+    local soundBtn = display.newCircle(uiGroup, safeX + safeW - 34, cardTop + 31, 19)
+    soundBtn:setFillColor(0.32, 0.28, 0.84)
+    local soundText = display.newText({parent=uiGroup, text="♪", x=soundBtn.x, y=soundBtn.y, font=native.systemFontBold, fontSize=22})
+    soundText:setFillColor(1,1,1)
+
+    -- Instruction panel
+    local instructionH = math.floor(safeH * 0.10)
+    local instructionY = cardTop + profileH + 8 + instructionH * 0.5
+    hintPanel = display.newRoundedRect(uiGroup, cx, instructionY, safeW * 0.78, instructionH, 18)
+    hintPanel:setFillColor(0.80, 0.88, 0.98, 0.96)
+    hintPanel.strokeWidth = 1
+    hintPanel:setStrokeColor(0.55, 0.68, 0.88)
+    hintPanel:addEventListener("tap", hintPanelTap)
+
+    local basketIcon = display.newText({parent=uiGroup, text="▾", x=hintPanel.x-hintPanel.width*0.40, y=instructionY-3, font=native.systemFontBold, fontSize=32})
+    basketIcon:setFillColor(0.23, 0.56, 0.36)
+    hintText = display.newText({
+        parent=uiGroup,
+        text="Move the basket under the next word.",
+        x=hintPanel.x-hintPanel.width*0.30,
+        y=instructionY,
+        width=hintPanel.width*0.66,
+        font=native.systemFontBold,
+        fontSize=18,
+        align="left"
+    })
+    hintText.anchorX=0
+    hintText:setFillColor(0.19,0.29,0.55)
+    hintText:addEventListener("tap", hintPanelTap)
+
+    levelLabel = display.newText({parent=uiGroup, text=tostring(LevelID_return or ""), x=0, y=0, font=native.systemFont, fontSize=1})
+    levelLabel.isVisible=false
+
+    -- Game bounds are the open area between instruction and order strip
+    local orderStripH = math.floor(safeH * 0.065)
+    local actionBarH = math.floor(safeH * 0.09)
+    local orderStripY = safeY + safeH - actionBarH - orderStripH * 0.5
+    local gameTop = instructionY + instructionH * 0.5 + 5
+    local gameBottom = orderStripY - orderStripH * 0.5 - 4
+
+    if basket then
+        basket.width, basket.height = 92, 78
+        basket.x = cx
+        basket.y = gameBottom - 44
+        basket.minGameY = gameTop + 35
+        basket.maxGameY = gameBottom - 35
+        basket.minGameX = safeX + 45
+        basket.maxGameX = safeX + safeW - 45
+    end
+
+    -- Invisible collected text holder retained for game logic
+    bottomPanel = display.newRect(uiGroup, cx, orderStripY, safeW, orderStripH)
+    bottomPanel:setFillColor(0.80, 0.87, 0.98, 0.96)
+    bottomPanelExpanded = false
+
+    originalVerse = display.newText(uiGroup, tostring(Text_return or ""), 0, 0, display.contentWidth, 0, native.systemFont, 1)
     originalVerse.isVisible = false
+    verse = display.newText(uiGroup, "", 0, 0, 1, 0, native.systemFont, 1)
+    verse.isVisible = false
 
-    verse = display.newText(
-        uiGroup,
-        "",
-        bottomPanel.x - bottomPanel.width * 0.5 + 18,
-        bottomPanel.y,
-        bottomPanel.width - 36,
-        0,
-        native.systemFontBold,
-        42
-    )
-    verse.anchorX = 0
-    verse:setFillColor(unpack(colors.textOnLight))
+    -- Order to catch row
+    local orderCaption = display.newText({parent=uiGroup, text="Order to catch:", x=safeX+7, y=orderStripY, font=native.systemFontBold, fontSize=18})
+    orderCaption.anchorX=0
+    orderCaption:setFillColor(0.25,0.30,0.66)
 
-    updateCollectedVerseDisplay()
+    local orderWords = splitWords(Text_return)
+    local maxVisible = math.min(#orderWords, 5)
+    local rowLeft = safeX + 92
+    local available = safeW - 98
+    local chipW = available / math.max(maxVisible,1) - 4
+    for i=1,maxVisible do
+        local chipX = rowLeft + (i-0.5)*(available/maxVisible)
+        local chip = display.newRoundedRect(uiGroup, chipX, orderStripY, chipW, orderStripH*0.58, 12)
+        chip:setFillColor(i==1 and 0.78 or 0.88, i==1 and 0.88 or 0.91, 0.98)
+        local label = display.newText({parent=uiGroup, text=tostring(i).."  "..tostring(orderWords[i]), x=chipX, y=orderStripY, width=chipW-5, font=native.systemFontBold, fontSize=16, align="center"})
+        label:setFillColor(0.20,0.27,0.60)
+        chip.textObject=label
+        orderLabels[i]=chip
+    end
+
+    -- Bottom action bar
+    local actionY = safeY + safeH - actionBarH*0.5
+    local actionBar = display.newRect(uiGroup, cx, actionY, safeW, actionBarH)
+    actionBar:setFillColor(0.70,0.79,0.94,0.98)
+    local editBtn = display.newCircle(uiGroup, safeX+34, actionY, 25)
+    editBtn:setFillColor(0.49,0.57,0.72)
+    local editText = display.newText({parent=uiGroup, text="Edit", x=editBtn.x, y=editBtn.y, font=native.systemFontBold, fontSize=13})
+    editText:setFillColor(1,1,1)
+    editBtn:addEventListener("tap", function() gotoCustomize(); return true end)
+    editText:addEventListener("tap", function() gotoCustomize(); return true end)
+
+    praiseLabel = display.newText({parent=uiGroup, text="★   Great job!", x=cx, y=actionY, font=native.systemFontBold, fontSize=22})
+    praiseLabel:setFillColor(0.27,0.24,0.68)
+    local share = display.newCircle(uiGroup, safeX+safeW-34, actionY, 25)
+    share:setFillColor(0.49,0.57,0.72)
+    local shareText = display.newText({parent=uiGroup, text="↑", x=share.x, y=share.y-1, font=native.systemFontBold, fontSize=24})
+    shareText:setFillColor(1,1,1)
+
+    progressLabel = display.newText({parent=uiGroup, text="Word\n1 of "..tostring(#orderWords), x=basket and basket.x or cx, y=basket and basket.y+18 or gameBottom-20, font=native.systemFontBold, fontSize=18, align="center"})
+    progressLabel:setFillColor(0.23,0.31,0.62)
 
     --------------------------------------------------------
     -- Gameplay setup
@@ -1444,6 +1339,7 @@ buildHintPanel({
     myTable = verseWords
 
     updateHintDisplay()
+    updateOrderStrip()
 
     Runtime:addEventListener("collision", onCollision)
 
@@ -1516,6 +1412,12 @@ function scene:create(event)
     classCode = params.prefix or composer.getVariable("prefix")
     className = params.className or composer.getVariable("className")
     useFirstAvailable = params.useFirstAvailable or false
+    memoryProfile = params.memoryProfile or {
+        name = params.personName or "Steve",
+        initials = params.personInitials or "PICTURE",
+        photo = params.personPhoto or "memoryspring/profile.png",
+        facts = params.personFacts
+    }
 
     logger.scene(
         "game",
@@ -1559,35 +1461,6 @@ function scene:create(event)
     lastWord = display.newText(uiGroup, "", 1, 1, native.systemFont, 2)
 
     physics.start()
-
-    local wallThickness = 40
-
-local leftWall = display.newRect(
-    mainGroup,
-    -wallThickness * 0.5,
-    display.contentCenterY,
-    wallThickness,
-    display.contentHeight * 2
-)
-leftWall.isVisible = false
-physics.addBody(leftWall, "static", {
-    bounce = 1,
-    friction = 0
-})
-
-local rightWall = display.newRect(
-    mainGroup,
-    display.contentWidth + wallThickness * 0.5,
-    display.contentCenterY,
-    wallThickness,
-    display.contentHeight * 2
-)
-rightWall.isVisible = false
-physics.addBody(rightWall, "static", {
-    bounce = 1,
-    friction = 0
-})
-
     logger.scene("game", "create complete physics started")
 end
 

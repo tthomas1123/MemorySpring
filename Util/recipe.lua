@@ -7,5 +7,5 @@ return {
     projectPath = root,
     dstPath = root .. "/build",
     certificatePath = root .. "/Util/distribution.mobileprovision",
-    customTemplate = "-angle",
+  --  customTemplate = "-angle",
 }
