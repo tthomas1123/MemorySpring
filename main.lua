@@ -2,7 +2,7 @@
 local MEMORY_SPRING_LOCAL_PROTOTYPE = true
 if MEMORY_SPRING_LOCAL_PROTOTYPE then
     display.setStatusBar(display.HiddenStatusBar)
-    require("composer").gotoScene("memorySpringSetup")
+    require("composer").gotoScene("memorySpringHome")
     return
 end
 
