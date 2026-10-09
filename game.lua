@@ -292,59 +292,19 @@ end
 ------------------------------------------------------------
 -- Navigation
 ------------------------------------------------------------
-local function gotoCustomize()
-    if not classCode or classCode == "" then
-        logger.warn("[scene:game] gotoCustomize blocked missing classCode")
-        native.showAlert(
-            languages.t("no_class_selected"),
-            languages.t("please_select_class"),
-            { languages.t("ok") }
-        )
-        return
-    end
-
-    logger.scene("gameMenu", "gotoGameMenu user=", tostring(user), " name=", tostring(name), " prefix=", tostring(classCode), " level=", tostring(level))
-    composer.removeScene("game")
-    composer.gotoScene("gameMenu", {
-        effect = "slideLeft",
-        time   = 250,
-        params = {
-            user    = user,
-            name    = name,
-            prefix  = classCode,
-            levelId = level,
-            mode    = "edit",
-        }
-    })
-end
-
-local function gotoSelectLevel()
-    if memorySpringSample then
-        composer.gotoScene("memorySpringHome")
-        return
-    end
-    logger.scene("game", "gotoSelectLevel user=", tostring(user), " prefix=", tostring(classCode), " level=", tostring(level))
-
+local function gotoMemorySpringHome()
     if gameLoopTimer then
         timer.cancel(gameLoopTimer)
         gameLoopTimer = nil
     end
     Runtime:removeEventListener("collision", onCollision)
     physics.pause()
-    composer.gotoScene("memorySpringHome", {effect = "slideRight", time = 250})
+    composer.gotoScene("memorySpringHome", {effect="slideRight", time=250})
 end
 
-local function gotoCustomize()
-    gotoMemorySpringHome()
-end
-
-local function gotoSelectLevel()
-    gotoMemorySpringHome()
-end
-
-local function gotoMenu()
-    gotoMemorySpringHome()
-end
+local function gotoCustomize() gotoMemorySpringHome() end
+local function gotoSelectLevel() gotoMemorySpringHome() end
+local function gotoMenu() gotoMemorySpringHome() end
 
 ------------------------------------------------------------
 -- Hint modal
@@ -1179,76 +1139,32 @@ local function startLevelFromRow(levelData)
         0.52
     )
 
-    -- Profile card
-    local cardTop = safeY + headerH + 7
-    local profileH = math.floor(safeH * 0.215)
-    local profileCard = display.newRoundedRect(uiGroup, cx, cardTop + profileH * 0.5, safeW * 0.97, profileH, 18)
-    profileCard:setFillColor(0.77, 0.86, 0.98, 0.97)
-    profileCard.strokeWidth = 1
-    profileCard:setStrokeColor(0.54, 0.67, 0.88)
-
-    local photoSize = profileH * 0.72
-    local photoX = safeX + 22 + photoSize * 0.5
-    local photoY = profileCard.y
-    local photoFile = memoryProfile.photo or "memoryspring/profile.png"
-    if system.pathForFile(photoFile, system.ResourceDirectory) then
-        profilePhoto = display.newImageRect(uiGroup, photoFile, photoSize, photoSize)
-        profilePhoto.x, profilePhoto.y = photoX, photoY
-    else
-        profilePhoto = display.newCircle(uiGroup, photoX, photoY, photoSize * 0.5)
-        profilePhoto:setFillColor(0.91, 0.94, 0.98)
-        local initials = display.newText({parent=uiGroup, text=memoryProfile.initials or "ET", x=photoX, y=photoY, font=native.systemFontBold, fontSize=36})
-        initials:setFillColor(0.24, 0.34, 0.63)
-    end
-
-    local tx = photoX + photoSize * 0.62
-    local tw = safeX + safeW - 18 - tx
-    local pname = display.newText({parent=uiGroup, text=memoryProfile.name or name or "Emma Thomas", x=tx, y=cardTop+22, width=tw, font=native.systemFontBold, fontSize=25, align="left"})
-    pname.anchorX, pname.anchorY = 0, 0
-    pname:setFillColor(0.16, 0.23, 0.58)
-
-    local facts = memoryProfile.facts or {
-        "Son",
-        "Lives here in Orland, California",
-        "Birthday September 8, 1972",
-        "Loves fishing and cars",
-        "Loves to BBQ",
-        "Happily Married to Tina",
-        "Steve's Daughters Allison and Emma"
-    }
-    local factText = table.concat(facts, "\n")
-    local factObj = display.newText({parent=uiGroup, text=factText, x=tx, y=cardTop+55, width=tw, font=native.systemFont, fontSize=28, align="left"})
-    factObj.anchorX, factObj.anchorY = 0, 0
-    factObj:setFillColor(0.20, 0.27, 0.55)
-
-    local soundBtn = display.newCircle(uiGroup, safeX + safeW - 34, cardTop + 31, 19)
-    soundBtn:setFillColor(0.32, 0.28, 0.84)
-    local soundText = display.newText({parent=uiGroup, text="♪", x=soundBtn.x, y=soundBtn.y, font=native.systemFontBold, fontSize=22})
-    soundText:setFillColor(1,1,1)
-
-    -- Instruction panel
-    local instructionH = math.floor(safeH * 0.10)
-    local instructionY = cardTop + profileH + 8 + instructionH * 0.5
-    hintPanel = display.newRoundedRect(uiGroup, cx, instructionY, safeW * 0.78, instructionH, 18)
-    hintPanel:setFillColor(0.80, 0.88, 0.98, 0.96)
+    -- Simple sample layout: keep the full play area available.
+    local cardTop = safeY + headerH + 12
+    local instructionH = math.floor(safeH * 0.17)
+    local instructionY = cardTop + instructionH * 0.5
+    hintPanel = display.newRoundedRect(uiGroup, cx, instructionY, safeW * 0.96, instructionH, 14)
+    hintPanel:setFillColor(1, 1, 1, 0.94)
     hintPanel.strokeWidth = 1
-    hintPanel:setStrokeColor(0.55, 0.68, 0.88)
+    hintPanel:setStrokeColor(0.72, 0.72, 0.72)
     hintPanel:addEventListener("tap", hintPanelTap)
 
-    local basketIcon = display.newText({parent=uiGroup, text="▾", x=hintPanel.x-hintPanel.width*0.40, y=instructionY-3, font=native.systemFontBold, fontSize=32})
-    basketIcon:setFillColor(0.23, 0.56, 0.36)
+    local heading = display.newText({
+        parent=uiGroup, text=tostring(LevelID_return or ""),
+        x=safeX+18, y=cardTop+9, width=safeW-36,
+        font=native.systemFontBold, fontSize=22, align="left"
+    })
+    heading.anchorX, heading.anchorY = 0, 0
+    heading:setFillColor(0.12, 0.17, 0.21)
+
     hintText = display.newText({
         parent=uiGroup,
-        text="Move the basket under the next word.",
-        x=hintPanel.x-hintPanel.width*0.30,
-        y=instructionY,
-        width=hintPanel.width*0.66,
-        font=native.systemFontBold,
-        fontSize=18,
-        align="left"
+        text="Move basket to catch words in order.\nCatch flower to erase the last word.\nTap this panel to view the words.",
+        x=safeX+56, y=cardTop+42, width=safeW-74,
+        font=native.systemFont, fontSize=16, align="left"
     })
-    hintText.anchorX=0
-    hintText:setFillColor(0.19,0.29,0.55)
+    hintText.anchorX, hintText.anchorY = 0, 0
+    hintText:setFillColor(0.12, 0.17, 0.21)
     hintText:addEventListener("tap", hintPanelTap)
 
     levelLabel = display.newText({parent=uiGroup, text=tostring(LevelID_return or ""), x=0, y=0, font=native.systemFont, fontSize=1})
@@ -1412,12 +1328,7 @@ function scene:create(event)
     classCode = params.prefix or composer.getVariable("prefix")
     className = params.className or composer.getVariable("className")
     useFirstAvailable = params.useFirstAvailable or false
-    memoryProfile = params.memoryProfile or {
-        name = params.personName or "Steve",
-        initials = params.personInitials or "PICTURE",
-        photo = params.personPhoto or "memoryspring/profile.png",
-        facts = params.personFacts
-    }
+    memoryProfile = params.memoryProfile or {}
 
     logger.scene(
         "game",
