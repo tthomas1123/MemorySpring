@@ -1,80 +1,137 @@
--- Self-contained sample catch game: no account, scores, penalties or failure states.
+-- Memory Spring sample: basket-based, always-winnable catch game.
+-- Uses the SmartSheep basket artwork; no scores, time limits, penalties or losing.
 local composer=require("composer")
+local physics=require("physics")
 local scene=composer.newScene()
 local words={"Honest","Kind","Brave","Leader"}
-local green={0.25,0.40,0.32};local cream={0.976,0.966,0.94}
-local tokens={};local timerHandle;local index=1;local finished=false
-local function label(g,s,x,y,w,size,color)
- local t=display.newText({parent=g,text=s,x=x,y=y,width=w,font=native.systemFontBold,fontSize=size,align="center"})
+local green={0.25,0.40,0.32}
+local cream={0.976,0.966,0.94}
+local falling, basket, ticker, hint, subtitle, stageGroup
+local index=1
+local completed=false
+local function text(parent,value,x,y,w,size,color)
+ local t=display.newText({parent=parent,text=value,x=x,y=y,width=w,font=native.systemFontBold,fontSize=size,align="center"})
  t:setFillColor(unpack(color));return t
 end
-local function clearTokens()
- for _,v in ipairs(tokens) do display.remove(v) end
- tokens={}
+local function removeFalling()
+ if falling then display.remove(falling);falling=nil end
 end
-local function goHome()
- if timerHandle then timer.cancel(timerHandle);timerHandle=nil end
- composer.gotoScene("memorySpringHome",{effect="slideRight",time=220})
+local function home()
+ if ticker then timer.cancel(ticker);ticker=nil end
+ physics.pause()
+ composer.gotoScene("memorySpringHome",{effect="slideRight",time=200})
+end
+local function finish()
+ completed=true
+ if ticker then timer.cancel(ticker);ticker=nil end
+ removeFalling()
+ hint.text="You did beautifully!"
+ subtitle.text="A moment worth remembering"
+ local cx=display.contentCenterX
+ local top=display.safeScreenOriginY or 0
+ local h=display.safeActualContentHeight or display.contentHeight
+ text(stageGroup,"ABRAHAM LINCOLN",cx,top+h*0.41,display.safeActualContentWidth-32,25,green)
+ text(stageGroup,"Honest  •  Kind  •  Brave  •  Leader",cx,top+h*0.52,display.safeActualContentWidth-32,17,green)
+ text(stageGroup,"Every moment matters.",cx,top+h*0.63,display.safeActualContentWidth-32,19,green)
+ local again=text(stageGroup,"Play Again",cx,top+h*0.76,display.safeActualContentWidth-32,23,green)
+ again:addEventListener("tap",function()
+  composer.removeScene("memorySpringDemo")
+  composer.gotoScene("memorySpringDemo")
+  return true
+ end)
+end
+local function spawn()
+ if completed or falling then return end
+ local cx=display.contentCenterX
+ local top=display.safeScreenOriginY or 0
+ local w=display.safeActualContentWidth or display.contentWidth
+ local x=cx+math.random(-math.floor(w*0.30),math.floor(w*0.30))
+ local group=display.newGroup()
+ stageGroup:insert(group)
+ local leaf=display.newRoundedRect(group,0,0,math.min(170,w*0.45),64,27)
+ leaf:setFillColor(0.84,0.91,0.80)
+ text(group,words[index],0,0,150,22,green)
+ group.x=x;group.y=top+150
+ falling=group
+ -- A simple falling motion; if missed, the same word returns.
+ local dest=display.contentCenterY+math.min(185,(display.safeActualContentHeight or display.contentHeight)*0.27)
+ transition.to(group,{time=4100,y=dest,onComplete=function()
+  if falling==group and not completed then removeFalling();ticker=timer.performWithDelay(400,spawn) end
+ end})
+end
+local function checkCatch()
+ if not falling or completed then return end
+ local dx=math.abs(falling.x-basket.x)
+ local dy=math.abs(falling.y-basket.y)
+ if dx<100 and dy<95 then
+  transition.cancel(falling)
+  removeFalling()
+  index=index+1
+  if index>#words then finish() else
+   hint.text="Catch: "..words[index]
+   ticker=timer.performWithDelay(400,spawn)
+  end
+ end
+end
+local function dragBasket(event)
+ if event.phase=="began" then
+  display.currentStage:setFocus(event.target)
+  event.target.isFocus=true
+ elseif event.target.isFocus and (event.phase=="moved" or event.phase=="ended" or event.phase=="cancelled") then
+  local left=display.screenOriginX+55
+  local right=display.screenOriginX+display.actualContentWidth-55
+  basket.x=math.max(left,math.min(right,event.x))
+  checkCatch()
+  if event.phase~="moved" then
+   display.currentStage:setFocus(nil)
+   event.target.isFocus=false
+  end
+ end
+ return true
 end
 function scene:create()
- local g=self.view;local cx=display.contentCenterX
+ local g=self.view
+ local cx=display.contentCenterX
  local top=display.safeScreenOriginY or 0
  local h=display.safeActualContentHeight or display.contentHeight
  local w=display.safeActualContentWidth or display.contentWidth
  local bg=display.newRect(g,cx,display.contentCenterY,display.actualContentWidth+4,display.actualContentHeight+4)
  bg:setFillColor(unpack(cream))
- label(g,"A GENTLE MOMENT",cx,top+42,w-40,22,green)
- self.instruction=label(g,"Catch the word: "..words[1],cx,top+100,w-40,23,green)
- self.message=label(g,"Tap the floating word to catch it.",cx,top+h*0.20,w-45,17,green)
- local home=label(g,"‹ Home",cx,top+h-44,w-45,20,green)
- home:addEventListener("tap",goHome)
-end
-local function complete(self)
- finished=true
- clearTokens()
- self.instruction.text="A moment worth remembering"
- self.message.text="You did beautifully."
- local g=self.view;local cx=display.contentCenterX
- local top=display.safeScreenOriginY or 0
- local h=display.safeActualContentHeight or display.contentHeight
- label(g,"ABRAHAM LINCOLN",cx,top+h*0.38,display.safeActualContentWidth-45,26,green)
- label(g,"Honest • Kind • Brave • Leader",cx,top+h*0.48,display.safeActualContentWidth-45,18,green)
- label(g,"Every moment matters.",cx,top+h*0.62,display.safeActualContentWidth-45,20,green)
- local again=label(g,"Play again",cx,top+h*0.75,display.safeActualContentWidth-45,23,green)
- again:addEventListener("tap",function()
-  composer.removeScene("memorySpringDemo")
-  composer.gotoScene("memorySpringDemo")
- end)
-end
-local function spawn(self)
- if finished then return end
- clearTokens()
- local g=self.view;local cx=display.contentCenterX
- local top=display.safeScreenOriginY or 0
- local h=display.safeActualContentHeight or display.contentHeight
- local y=top+h*0.44
- local pill=display.newRoundedRect(g,cx,y,math.min(display.safeActualContentWidth-72,250),88,36)
- pill:setFillColor(0.87,0.92,0.85)
- tokens[#tokens+1]=pill
- local word=label(g,words[index],cx,y,210,28,green)
- tokens[#tokens+1]=word
- local function catch()
-  if finished then return true end
-  index=index+1
-  if index>#words then complete(self) else
-   self.instruction.text="Catch the word: "..words[index]
-   spawn(self)
-  end
-  return true
+ text(g,"MEMORY SPRING",cx,top+40,w-35,25,green)
+ hint=text(g,"Catch: "..words[1],cx,top+91,w-35,22,green)
+ subtitle=text(g,"Move the basket to catch each word",cx,top+128,w-35,15,green)
+ stageGroup=display.newGroup();g:insert(stageGroup)
+ basket=display.newImageRect(stageGroup,"basket.png",120,120)
+ if not basket then
+  basket=display.newRoundedRect(stageGroup,cx,top+h*0.77,125,60,16)
+  basket:setFillColor(0.68,0.47,0.28)
  end
- pill:addEventListener("tap",catch);word:addEventListener("tap",catch)
- -- The word stays available until caught. No timeout, no failure.
+ basket.x=cx;basket.y=top+h*0.76
+ basket:addEventListener("touch",dragBasket)
+ local back=text(g,"‹ Home",cx,top+h-34,w-35,20,green)
+ back:addEventListener("tap",function()home();return true end)
 end
 function scene:show(event)
- if event.phase=="did" then index=1;finished=false;self.instruction.text="Catch the word: "..words[1];self.message.text="Tap the floating word to catch it.";spawn(self) end
+ if event.phase=="did" then
+  physics.start();physics.setGravity(0,0)
+  index=1;completed=false
+  hint.text="Catch: "..words[1]
+  subtitle.text="Move the basket to catch each word"
+  spawn()
+  self.frameListener=function()checkCatch()end
+  Runtime:addEventListener("enterFrame",self.frameListener)
+ end
 end
 function scene:hide(event)
- if event.phase=="will" then clearTokens();if timerHandle then timer.cancel(timerHandle);timerHandle=nil end end
+ if event.phase=="will" then
+  if self.frameListener then Runtime:removeEventListener("enterFrame",self.frameListener);self.frameListener=nil end
+  if ticker then timer.cancel(ticker);ticker=nil end
+  if falling then transition.cancel(falling) end
+  removeFalling()
+  physics.pause()
+ end
 end
-scene:addEventListener("create",scene);scene:addEventListener("show",scene);scene:addEventListener("hide",scene)
+scene:addEventListener("create",scene)
+scene:addEventListener("show",scene)
+scene:addEventListener("hide",scene)
 return scene
