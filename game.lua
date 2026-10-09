@@ -35,6 +35,7 @@ local StandardHeader   = require("ui.standardHeader")
 local logger           = require("logger")
 
 local user, name, level, classCode, className
+local memorySpringSample = false
 local useFirstAvailable = false
 local requestedLevelId = nil
 
@@ -447,6 +448,10 @@ local function gotoCustomize()
 end
 
 local function gotoSelectLevel()
+    if memorySpringSample then
+        composer.gotoScene("memorySpringHome")
+        return
+    end
     logger.scene("game", "gotoSelectLevel user=", tostring(user), " prefix=", tostring(classCode), " level=", tostring(level))
 
     if gameLoopTimer then
@@ -1026,6 +1031,14 @@ end
 -- Success Handling
 ------------------------------------------------------------
 local function success()
+    if memorySpringSample then
+        hideHintModal()
+        if gameLoopTimer then timer.cancel(gameLoopTimer); gameLoopTimer = nil end
+        Runtime:removeEventListener("collision", onCollision)
+        physics.pause()
+        composer.gotoScene("memorySpringSampleSuccess", {params={title="Abraham Lincoln"}})
+        return
+    end
     logger.scene("game", "success start user=", tostring(user), " prefix=", tostring(Prefix_return or classCode), " level=", tostring(level), " title=", tostring(LevelID_return))
 
     local keyPrefix = Prefix_return or classCode or ""
@@ -1509,6 +1522,7 @@ function scene:create(event)
     local sceneGroup = self.view
     local params = event.params or {}
 
+    memorySpringSample = params.memorySpringSample == true
     user      = params.user
     name      = params.name
     level     = params.desiredLevel or params.level
@@ -1595,6 +1609,10 @@ function scene:show(event)
     logger.scene("game", "show phase=", event.phase or "nil")
 
     if event.phase == "did" then
+        if memorySpringSample then
+            startLevelFromRow({Title="Abraham Lincoln",Text="Honest Kind Brave Leader",ThemeID="Original",EraserWord="eraser"})
+            return
+        end
         if not level or tostring(level) == "" then
             logger.error("[scene:game] show did missing level")
             native.showAlert(
