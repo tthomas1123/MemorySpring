@@ -84,7 +84,13 @@ function scene:create()
     local homeTarget=display.newRect(g,cx,homeY,buttonWidth,48*scale)
     homeTarget.isVisible=false
     homeTarget.isHitTestable=true
-    makeText(g,"Home",cx,homeY,buttonWidth,21*scale,C.green,true)
+    -- A light backing keeps the secondary action readable over dark watercolor grass.
+    local homeBacking=display.newRoundedRect(g,cx,homeY,buttonWidth*0.62,44*scale,22*scale)
+    homeBacking:setFillColor(1,0.972,0.919,0.95)
+    homeBacking.strokeWidth=1.5*scale
+    homeBacking:setStrokeColor(0.27,0.42,0.34,0.5)
+    makeText(g,"Home",cx,homeY,buttonWidth,23*scale,C.ink,true)
+    homeTarget:toFront()
     homeTarget:addEventListener("tap",function()
         composer.gotoScene("memorySpringHome",{effect="fade",time=250})
         return true
