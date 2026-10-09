@@ -99,11 +99,8 @@ function scene:create()
     local setup = label(g,"Create a Memory",cx,safeBottom-39*scale,
         width-50,19*scale,C.green,"Georgia")
     setup:addEventListener("tap",function()
-        local savedId=system.getPreference("app","userId","string")
-        local savedToken=system.getPreference("app","apiToken","string")
-        local hasSession=savedId and savedId~="" and savedToken and savedToken~=""
-        composer.gotoScene(hasSession and "memorySpringSetup" or "memorySpringLogin",
-            {effect="slideLeft",time=220})
+        -- Always display the account gate during login-flow testing.
+        composer.gotoScene("memorySpringLogin",{effect="slideLeft",time=220})
         return true
     end)
 end
