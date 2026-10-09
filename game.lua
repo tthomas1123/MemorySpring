@@ -754,8 +754,13 @@ local function updateHintDisplay()
     if not hintText or not hintPanel then return end
 
     if not hintShowingVerse then
-        hintText.text = hintDefaultText
-        fitTextToHeight(hintText, instructionFontSize, 22, hintPanel.height * 0.60)
+        if memorySpringSample then
+            hintText.text = "Move basket to catch words in order.\nCatch the flower to erase the last word.\nTap here to view the words."
+            hintText.size = math.max(13, math.min(19, hintPanel.height * 0.115))
+        else
+            hintText.text = hintDefaultText
+            fitTextToHeight(hintText, instructionFontSize, 22, hintPanel.height * 0.60)
+        end
         if hintBasket then hintBasket.isVisible = true end
         if hintEraser then hintEraser.isVisible = true end
         if hintLegend then hintLegend.isVisible = true end
@@ -790,7 +795,9 @@ local function updateHintDisplay()
     if hintLegend then hintLegend.isVisible = false end
     if hintTap then hintTap.isVisible = false end
     hintText.text = preview
-    fitTextToHeight(hintText, instructionFontSize, 24, hintPanel.height * 0.60)
+    if not memorySpringSample then
+        fitTextToHeight(hintText, instructionFontSize, 24, hintPanel.height * 0.60)
+    end
 end
 
 
@@ -912,7 +919,7 @@ end
             activeWordByIndex[i] = newWord
 
            newWord.x = math.random(60, display.contentWidth - 60)
-            newWord.y = -60
+            newWord.y = (memorySpringSample and hintPanel) and (hintPanel.y + hintPanel.height * 0.5 + 28) or -60
 
             local direction = 1
             if newWord.x > display.contentCenterX then
@@ -968,7 +975,7 @@ local function loadFlower()
     newFlower.myName = "flower"
 
    newFlower.x = math.random(60, display.contentWidth - 60)
-    newFlower.y = -60
+    newFlower.y = (memorySpringSample and hintPanel) and (hintPanel.y + hintPanel.height * 0.5 + 28) or -60
 
     local direction = 1
     if newFlower.x > display.contentCenterX then
