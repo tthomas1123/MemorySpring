@@ -1201,6 +1201,11 @@ local function startLevelFromRow(levelData)
         end
     end
 
+    -- Memory Spring sample uses its own watercolor artwork; all gameplay stays unchanged.
+    if memorySpringSample then
+        backgroundTheme = "MemorySpringGameBackground.png"
+    end
+
     local background = newAspectFillImage(backGroup, backgroundTheme)
     if background then background:toBack() end
 
