@@ -193,8 +193,8 @@ local function buildHintPanel(params)
 
         hintText = display.newText({
             parent = uiGroup,
-            text = "Catch words in order.\\nFlower removes a word.\\nTap for a hint.",
-            x = textLeft, y = topY + titleSize + 9,
+            text = "Catch Words in order.\\n\\nFlower removes a word.\\n\\nTap for a hint.",
+            x = textLeft, y = topY + titleSize + 17,
             width = textWidth, font = native.systemFont,
             fontSize = bodySize, align = "left"
         })
@@ -761,7 +761,7 @@ local function updateHintDisplay()
 
     if not hintShowingVerse then
         if memorySpringSample then
-            hintText.text = "Catch words in order.\nFlower removes a word.\nTap for a hint."
+            hintText.text = "Catch Words in order.\n\nFlower removes a word.\n\nTap for a hint."
             hintText.size = math.max(27, math.min(34, hintPanel.height * 0.19))
         else
             hintText.text = hintDefaultText
