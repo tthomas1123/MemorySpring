@@ -156,6 +156,53 @@ local function buildHintPanel(params)
     hintPanel:setStrokeColor(0, 0, 0, 0.15)
     hintPanel:addEventListener("tap", hintPanelTap)
 
+    -- Memory Spring sample: large portrait replaces the tiny basket legend.
+    -- This is presentation only; the Catch gameplay remains unchanged.
+    if memorySpringSample then
+        local panelLeft = hintPanel.x - hintPanel.width * 0.5
+        local portraitSize = math.min(hintPanel.height - 20, hintPanel.width * 0.34)
+        local portraitX = panelLeft + 12 + portraitSize * 0.5
+        local portraitY = hintPanel.y
+        local portrait = display.newImageRect(uiGroup, "AbrahamLincoln.png", portraitSize, portraitSize)
+        if portrait then
+            portrait.x, portrait.y = portraitX, portraitY
+            portrait:addEventListener("tap", hintPanelTap)
+        else
+            print("Memory Spring: AbrahamLincoln.png not found; portrait omitted")
+        end
+
+        local textLeft = panelLeft + 20 + portraitSize
+        local textWidth = math.max(80, hintPanel.width - portraitSize - 34)
+        local topY = hintPanel.y - hintPanel.height * 0.5 + 14
+        local titleSize = math.max(16, math.min(26, hintPanel.height * 0.16))
+        local bodySize = math.max(13, math.min(19, hintPanel.height * 0.115))
+
+        levelLabel = display.newText({
+            parent = uiGroup, text = tostring(LevelID_return or ""),
+            x = textLeft, y = topY, width = textWidth,
+            font = native.systemFontBold, fontSize = titleSize, align = "left"
+        })
+        levelLabel.anchorX, levelLabel.anchorY = 0, 0
+        levelLabel:setFillColor(unpack(colors.textOnLight))
+
+        hintText = display.newText({
+            parent = uiGroup,
+            text = "Move basket to catch words in order.\\nCatch the flower to erase the last word.\\nTap here to view the words.",
+            x = textLeft, y = topY + titleSize + 9,
+            width = textWidth, font = native.systemFont,
+            fontSize = bodySize, align = "left"
+        })
+        hintText.anchorX, hintText.anchorY = 0, 0
+        hintText:setFillColor(unpack(colors.textOnLight))
+        hintText:addEventListener("tap", hintPanelTap)
+        headerGroup:toFront()
+        hintPanel:toFront()
+        if portrait then portrait:toFront() end
+        levelLabel:toFront()
+        hintText:toFront()
+        return
+    end
+
     levelLabel = display.newText({
         parent = uiGroup,
         text = tostring(LevelID_return or ""),
@@ -1311,7 +1358,7 @@ local function startLevelFromRow(levelData)
     --------------------------------------------------------
     -- Always-visible hint panel under header
     --------------------------------------------------------
-    local hintPanelH = math.floor(display.contentHeight * 0.18)
+    local hintPanelH = math.floor(display.contentHeight * (memorySpringSample and 0.25 or 0.18))
 local hintPanelY = (safeY + headerH) + hintPanelH * 0.5 + math.floor(display.contentHeight * 0.01)
 
 buildHintPanel({
