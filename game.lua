@@ -421,72 +421,27 @@ end
 ------------------------------------------------------------
 -- Navigation
 ------------------------------------------------------------
-local function gotoCustomize()
-    if not classCode or classCode == "" then
-        logger.warn("[scene:game] gotoCustomize blocked missing classCode")
-        native.showAlert(
-            languages.t("no_class_selected"),
-            languages.t("please_select_class"),
-            { languages.t("ok") }
-        )
-        return
+-- Memory Spring navigation only; Creator Catch gameplay remains unchanged.
+local function gotoMemorySpringHome()
+    if gameLoopTimer then
+        timer.cancel(gameLoopTimer)
+        gameLoopTimer = nil
     end
+    Runtime:removeEventListener("collision", onCollision)
+    physics.pause()
+    composer.gotoScene("memorySpringHome", {effect = "slideRight", time = 250})
+end
 
-    logger.scene("gameMenu", "gotoGameMenu user=", tostring(user), " name=", tostring(name), " prefix=", tostring(classCode), " level=", tostring(level))
-    composer.removeScene("game")
-    composer.gotoScene("gameMenu", {
-        effect = "slideLeft",
-        time   = 250,
-        params = {
-            user    = user,
-            name    = name,
-            prefix  = classCode,
-            levelId = level,
-            mode    = "edit",
-        }
-    })
+local function gotoCustomize()
+    gotoMemorySpringHome()
 end
 
 local function gotoSelectLevel()
-    if memorySpringSample then
-        composer.gotoScene("memorySpringHome")
-        return
-    end
-    logger.scene("game", "gotoSelectLevel user=", tostring(user), " prefix=", tostring(classCode), " level=", tostring(level))
-
-    if gameLoopTimer then
-        timer.cancel(gameLoopTimer)
-        gameLoopTimer = nil
-    end
-
-    Runtime:removeEventListener("collision", onCollision)
-    physics.pause()
-
-    composer.removeScene("game")
-    composer.gotoScene("selectLevels", {
-        effect = "slideRight",
-        time   = 250,
-        params = {
-            user   = user,
-            prefix = classCode
-        }
-    })
+    gotoMemorySpringHome()
 end
 
 local function gotoMenu()
-    logger.scene("game", "gotoMenu user=", tostring(user), " name=", tostring(name))
-
-    if gameLoopTimer then
-        timer.cancel(gameLoopTimer)
-        gameLoopTimer = nil
-    end
-
-    local options = {
-        params = { user = user, name = name }
-    }
-
-    composer.removeScene("game")
-    composer.gotoScene("menu", options)
+    gotoMemorySpringHome()
 end
 
 ------------------------------------------------------------
@@ -1036,7 +991,7 @@ local function success()
         if gameLoopTimer then timer.cancel(gameLoopTimer); gameLoopTimer = nil end
         Runtime:removeEventListener("collision", onCollision)
         physics.pause()
-        composer.gotoScene("memorySpringSampleSuccess", {params={title="Abraham Lincoln"}})
+        composer.gotoScene("memorySpringSampleSuccess", {params={title=LevelID_return}})
         return
     end
     logger.scene("game", "success start user=", tostring(user), " prefix=", tostring(Prefix_return or classCode), " level=", tostring(level), " title=", tostring(LevelID_return))
@@ -1320,7 +1275,7 @@ local function startLevelFromRow(levelData)
     header = StandardHeader.new(scene.view, {
         titlePlacement    = "back",
         fallbackTitle     = "",
-        onBack            = gotoCustomize,
+        onBack            = gotoMemorySpringHome,
         backIconImage     = "icons/back.png",
         titleColor        = colors.textPrimary,
         backLabelFontSize = 44,
